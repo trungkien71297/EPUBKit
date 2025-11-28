@@ -121,7 +121,7 @@ public final class EPUBParser: EPUBParserProtocol {
             // The spine's 'toc' attribute references a manifest item ID
             // We use this to find the actual NCX file path in the manifest
             // This two-step lookup is required by the EPUB specification
-            if let toc = spine.toc, let fileName = manifest.items[toc]?.path else {
+            if let toc = spine.toc, let fileName = manifest.items[toc]?.path {
                 let tableOfContentsElement = try contentService.tableOfContents(fileName)
                 tableOfContents = getTableOfContents(from: tableOfContentsElement)
                 delegate?.parser(self, didFinishParsing: tableOfContents)
