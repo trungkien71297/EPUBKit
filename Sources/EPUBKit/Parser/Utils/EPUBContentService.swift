@@ -74,6 +74,9 @@ class EPUBContentServiceImplementation: EPUBContentService {
     /// This is the directory where the OPF file is located and serves as the base
     /// for resolving relative paths in the manifest.
     let contentDirectory: URL
+    
+    /// The full path to the package document (OPF file).
+    let opfPath: URL
 
     /// Provides access to the spine element from the package document.
     ///
@@ -133,7 +136,7 @@ class EPUBContentServiceImplementation: EPUBContentService {
         // The content directory is crucial because all href attributes in the manifest
         // are resolved relative to the directory containing the OPF file
         contentDirectory = path.deletingLastPathComponent()
-        
+        opfPath = path
         // STEP 3: Load and parse the package document (OPF file)
         // This XML document contains the complete publication metadata, manifest, and spine
         let data = try Data(contentsOf: path)

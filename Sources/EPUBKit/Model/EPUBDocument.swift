@@ -28,6 +28,9 @@ public struct EPUBDocument {
     /// This is determined by parsing the META-INF/container.xml file.
     public let contentDirectory: URL
     
+    /// The full file path to the original EPUB file.
+    public let opfPath: URL
+    
     /// The publication metadata containing bibliographic information.
     /// Includes required elements like title, identifier, and language,
     /// as well as optional Dublin Core metadata elements.
@@ -49,17 +52,19 @@ public struct EPUBDocument {
     init(
         directory: URL,
         contentDirectory: URL,
+        opfPath: URL,
         metadata: EPUBMetadata,
         manifest: EPUBManifest,
         spine: EPUBSpine,
-        tableOfContents: EPUBTableOfContents
+        tableOfContents: EPUBTableOfContents?
     ) {
         self.directory = directory
         self.contentDirectory = contentDirectory
+        self.opfPath = opfPath
         self.metadata = metadata
         self.manifest = manifest
         self.spine = spine
-        self.tableOfContents = tableOfContents
+        self.tableOfContents = tableOfContents ?? EPUBTableOfContents(label: "", id: "")
     }
 
     /// Creates an EPUBDocument by parsing the EPUB file at the specified URL.
