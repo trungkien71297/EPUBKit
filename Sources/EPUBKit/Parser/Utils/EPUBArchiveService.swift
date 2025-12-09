@@ -61,7 +61,15 @@ class EPUBArchiveServiceImplementation: EPUBArchiveService {
         do {
             // Use Zip library's quick extraction method
             // This extracts all contents to a system-managed temporary directory
-            destination = try Zip.quickUnzipFile(url)
+            let fileManager = FileManager.default
+
+            let fileExtension = url.pathExtension
+            let fileName = url.lastPathComponent
+            let tempUrl = fileManager.temporaryDirectory
+            let directoryName = fileName.replacingOccurrences(of: ".\(fileExtension)", with: "")
+            let destinationUrl = tempUrl.appendingPathComponent(directoryName, isDirectory: true)
+            try Zip.unzipFile(url, destination: destinationUrl, overwrite: true, password: nil, progress: nil)
+            destination = destinationUrl
         } catch {
             // Wrap the underlying error in our domain-specific error type
             // This provides better context about what operation failed

@@ -76,10 +76,11 @@ public final class EPUBParser: EPUBParserProtocol {
     public func parse(documentAt path: URL) throws -> EPUBDocument {
         var directory: URL
         var contentDirectory: URL
+        var opfPath: URL
         var metadata: EPUBMetadata
         var manifest: EPUBManifest
         var spine: EPUBSpine
-        var tableOfContents: EPUBTableOfContents
+        var tableOfContents: EPUBTableOfContents?
         
         // Notify delegate that parsing has begun
         delegate?.parser(self, didBeginParsingDocumentAt: path)
@@ -102,6 +103,8 @@ public final class EPUBParser: EPUBParserProtocol {
             // and providing access to the parsed package document components
             let contentService = try EPUBContentServiceImplementation(directory)
             contentDirectory = contentService.contentDirectory
+            
+            opfPath = contentService.opfPath
             delegate?.parser(self, didLocateContentAt: contentDirectory)
 
             // STEP 3: Parse core EPUB components in dependency order
@@ -116,16 +119,17 @@ public final class EPUBParser: EPUBParserProtocol {
             // Parse manifest to get the complete resource inventory
             manifest = getManifest(from: contentService.manifest)
             delegate?.parser(self, didFinishParsing: manifest)
-
+            
             // STEP 4: Locate and parse table of contents using cross-references
             // The spine's 'toc' attribute references a manifest item ID
             // We use this to find the actual NCX file path in the manifest
             // This two-step lookup is required by the EPUB specification
             if let toc = spine.toc, let fileName = manifest.items[toc]?.path {
+                throw EPUBParserError.tableOfContentsMissing
                 let tableOfContentsElement = try contentService.tableOfContents(fileName)
                 tableOfContents = getTableOfContents(from: tableOfContentsElement)
-                delegate?.parser(self, didFinishParsing: tableOfContents)
             }
+            
         } catch let error {
             // CRITICAL: Always notify delegate of failures for proper error handling
             // This ensures that any cleanup or error reporting can be performed
@@ -137,7 +141,7 @@ public final class EPUBParser: EPUBParserProtocol {
         delegate?.parser(self, didFinishParsingDocumentAt: path)
         
         // Create and return the complete document with all parsed components
-        return EPUBDocument(directory: directory, contentDirectory: contentDirectory,
+        return EPUBDocument(directory: directory, contentDirectory: contentDirectory, opfPath: opfPath,
                             metadata: metadata, manifest: manifest,
                             spine: spine, tableOfContents: tableOfContents)
     }
