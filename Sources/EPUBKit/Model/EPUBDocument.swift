@@ -100,14 +100,23 @@ extension EPUBDocument {
     public var publisher: String? { metadata.publisher }
     
     /// The URL to the cover image file.
-    /// 
+    ///
     /// The cover is identified by:
-    /// 1. A meta element with name="cover" in the OPF metadata
-    /// 2. The corresponding manifest item with the referenced ID
-    /// 
+    /// 1. A manifest item with the `cover-image` property (standard EPUB 3)
+    /// 2. A meta element with name="cover-image" in the OPF metadata (non-standard EPUB 3 convention)
+    /// 3. A meta element with name="cover" in the OPF metadata (EPUB 2 style)
+    ///
+    /// `cover-image` is preferred when available, because it points to the actual image
+    /// asset rather than an XHTML cover page.
+    ///
     /// - Returns: The full URL to the cover image, or nil if no cover is specified.
     public var cover: URL? {
-        guard let coverId = metadata.coverId, let path = manifest.items[coverId]?.path else {
+        let coverId: String? = manifest.items.values.first { item in
+            guard let property = item.property else { return false }
+            return property.split(separator: " ").contains("cover-image")
+        }?.id ?? metadata.coverId
+
+        guard let id = coverId, let path = manifest.items[id]?.path else {
             return nil
         }
         return contentDirectory.appendingPathComponent(path)
